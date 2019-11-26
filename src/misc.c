@@ -1,0 +1,146 @@
+#include "misc.h"
+
+int inTab(int y, int x) {
+	return ((y>=0 && y<NBLIN)&&(x>=0 && x <NBCOL));
+}
+
+int vertical(int direction) {//Tells whether or not the car is in a vertical position
+	return (direction==UP||direction==DOWN);
+}
+
+int isFree(char c) {
+	return (c==' ' || c=='.' || (c>'A' && c<'Z') || c==('b'^'b'));//Will return 1 if c is a free space.
+}
+
+int sweepFront(int direction, int x, int y, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// 0 if the front spot isn't free, 1 if it is, 2 if car parked.
+	int i=0, width=0, height=0;
+	if (vertical(direction)) height=width=4;
+	else {
+		height=3; width=7;
+	}
+	switch (direction) {
+		case UP:
+			if (tab[y-1][x]=='@') return 2;
+			for (i=0;i<width;i++) {
+				if (!isFree(tab[y-1][x+i]))return 0;
+			} break;
+		case RIGHT: 
+			if (tab[y][x+width]=='@') return 2;
+				for (i=0;i<height;i++) {
+					if (!isFree(tab[y+i][x+width]))return 0;
+				} break;
+		case DOWN:
+			if (tab[y+height][x]=='@') return 2;
+				for (i=0;i<width;i++) {
+					if (!isFree(tab[y+height][x+i]))return 0;
+				} break;
+		case LEFT:
+			if (tab[y][x-1]=='@') return 2;
+				for (i=0;i<height;i++) {
+					if (!isFree(tab[y+i][x-1]))return 0;
+				} break;	
+		default: printw("Direction set as %d : SweepFront Error.\n", direction); return (-1);
+	}
+	return 1;
+}
+
+void interpretChar(char c) {
+	switch (c) {
+		case '[' : printw("┌"); break;
+		case ']' : printw("┐"); break;
+		case '-' : printw("─"); break;
+		case 't' : printw("┬");	break;
+		case '(' : printw("└");	break;
+		case '|' : printw("│");	break;
+		case ')' : printw("┘");	break;
+		case '{' : printw("┤");	break;
+		case '}' : printw("├");	break;
+		case '+' : printw("┼");	break;
+		case 'h' : printw("┴"); break;
+		case '/' : printw("|");	break;
+		case '_' : printw("-");	break;
+		case '.' : printw(" ");	break;
+		case ' ' : printw(" ");	break;
+		case 'b' : attron(COLOR_PAIR(4)); printw("-"); attroff(COLOR_PAIR(4));//Barrier
+		break;
+		case '@' : attron(COLOR_PAIR(6)); printw(" "); attroff(COLOR_PAIR(6));//Free parking Spot
+		break;
+		default : printw("%c",c); break;
+	}
+}
+
+int bestDirection(int left, int straight, int right) {//-1 ==> left; 0 ==> straight; 1 ==> right
+	if ((left==straight)&&(left==right)) return 0;//Not turning if every direction evaluates the same
+	
+	if ((left>0) || (straight>0) || (right>0)) {
+		if ((straight>left) && (straight>right)) return 0;
+		if ((left>straight) && (left>right)) return -1;
+		if ((right>left) && (right>straight)) return 1;
+		
+		if (left==straight) {
+			if (rand()%2==0) return -1;
+			return 0;
+		}
+		
+		if (left==right) {
+			if (rand()%2==0) return -1;
+			return 1;
+		} 
+		
+		if (straight==right) {
+			if (rand()%2==0) return 0;
+			return 1;
+		}
+	}	
+	return bestDirection(-left,-straight,-right);
+	
+	//return (rand()%3 -1);
+	
+}
+
+void activateBarrier(int nbLin, int nbCol, char tab[nbLin][nbCol], int openClose, int barrierNb) {
+	int posy=0,posx=0;int sizeCmpt=0;
+	switch (barrierNb) {
+		case 1: posy=47; posx=SPAWNX; break;//1st barrier of the entering sas.
+		case 2: posy=SPAWNY-1; posx=SPAWNX; break;//2nd barrier of the entering sas
+		case 3: posy=5; posx=93; break;//1st barrier of the exit sas
+		case 4: posy=0; posx=93; break;//2nd barrier of the exit sas
+	}
+	for (;sizeCmpt<4;sizeCmpt++) {
+		tab[posy][posx+sizeCmpt]^='b';
+	}
+	colorBarrier(nbLin,nbCol,tab,openClose,barrierNb);
+}
+
+void cleanExit() {
+	int i=0,j=0;
+	for (;i<4;i++) {
+	move (i+1,93);
+		for (j=0;j<4;j++) {
+			printw(" ");
+		}
+	}	
+}
+
+void colorBarrier(int nbLin, int nbCol, char tab[nbLin][nbCol], int greenOrRed, int barrierNb) {
+	int posy=0,posx=0;int sizeCmpt=0;
+	if (greenOrRed==0) attron(COLOR_PAIR(3));
+	if (greenOrRed==1) attron(COLOR_PAIR(4));
+	switch (barrierNb) {
+		case 1: posy=47; posx=SPAWNX; break;//1st barrier of the entering sas.
+		case 2: posy=SPAWNY-1; posx=SPAWNX; break;//2nd barrier of the entering sas
+		case 3: posy=5; posx=93; break;//1st barrier of the exit sas
+		case 4: posy=0; posx=93; break;//2nd barrier of the exit sas
+	}
+	for (;sizeCmpt<4;sizeCmpt++) {
+		mvprintw(posy,posx+sizeCmpt,"-");
+	}
+	attron(COLOR_PAIR(1));
+}
+
+
+
+
+
+

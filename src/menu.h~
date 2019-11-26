@@ -1,0 +1,9 @@
+#ifndef MENU_H
+#define MENU_H
+
+#include "misc.h"
+
+	void menu();
+	int selectMode();
+
+#endif
