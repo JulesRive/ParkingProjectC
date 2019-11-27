@@ -2,6 +2,9 @@
 #include "car.h"
 
 int L,C;
+extern int maxCarNumber;
+extern int carNumber;
+extern int spawnRate;
 
 /**Pour récupérer les coordonnées (x,y) du clic de la souris**/
 int click_souris()
@@ -98,6 +101,32 @@ void displayTab(int nbLin, int nbCol, char tab[nbLin][nbCol])
 		usleep(7500);
 		refresh();
 	}
+	mvaddstr(3,NBCOL+5,"  ┌────────────────┐\n");  
+	mvaddstr(4,NBCOL+5,"  │  q : Quit      │\n");
+  mvaddstr(5,NBCOL+5,"  └────────────────┘\n");
+  mvaddstr(7,NBCOL+5,"  ┌────────────────┐\n");   
+	mvaddstr(8,NBCOL+5,"  │ s : Slow down  │\n");
+  mvaddstr(9,NBCOL+5,"  └────────────────┘\n");
+  mvaddstr(11,NBCOL+5,"  ┌────────────────┐\n");
+	mvaddstr(12,NBCOL+5,"  │ f : Faster     │\n");
+  mvaddstr(13,NBCOL+5,"  └────────────────┘\n");
+  mvaddstr(15,NBCOL+5,"  ┌────────────────┐\n");
+	mvaddstr(16,NBCOL+5,"  │ p : Pause      │\n");
+  mvaddstr(17,NBCOL+5,"  └────────────────┘\n");
+  mvaddstr(19,NBCOL+5,"  ┌────────────────┐\n");
+	mvaddstr(20,NBCOL+5,"  │ r : Resume     │\n");
+  mvaddstr(21,NBCOL+5,"  └────────────────┘\n");
+  mvaddstr(23,NBCOL+5,"  ┌──────────────────────┐\n");
+	mvprintw(24,NBCOL+5,"  │ Cars in game : %3d   │\n", carNumber);
+  mvaddstr(25,NBCOL+5,"  └──────────────────────┘\n");
+  mvaddstr(27,NBCOL+5,"  ┌───────────────────────────┐\n");
+	mvprintw(28,NBCOL+5,"  │ Max Number of Cars : %3d  │\n", maxCarNumber);
+	mvprintw(29,NBCOL+5,"  │      (+/-) to modify      │\n");
+  mvaddstr(30,NBCOL+5,"  └───────────────────────────┘\n");
+  mvaddstr(32,NBCOL+5,"  ┌──────────────────────┐\n");
+	mvprintw(33,NBCOL+5,"  │ Spawn rate : 1/%3d   │\n", spawnRate);
+	mvprintw(34,NBCOL+5,"  │    (</>) to modify   │\n");
+  mvaddstr(35,NBCOL+5,"  └──────────────────────┘\n");
 }
 
 char key_pressed()
@@ -129,27 +158,70 @@ void initialize() {
 }
 
 void run(int nbLin, int nbCol, char tab[nbLin][nbCol], int mode) {
-	char c;
-	int i=0; int gameSleep=20;
+//Game loop, handles buttons
+	if (mode=='q') return;
+	if (mode==1) maxCarNumber=66;
+	if (mode==2) maxCarNumber=110;
+	char c, pauseC;
+	int i=0, pauseCmpt=0, gameSleep=20;
 	clear();
 	displayTab(nbLin,nbCol,tab);
 	refresh(); usleep(500000);
 	car* car=spawnCar(SPAWNY, SPAWNX, UP, nbLin, nbCol, tab);
 	refresh(); usleep(500000);
 	while (car) {
-		updateCar(car, nbLin, nbCol, tab);
-		if (car->toDelete) {
-			struct car *fille = car->next;
-			 free(car);
-			 car=fille;
-		}
-
+		updateGame(car, nbLin, nbCol, tab);
+		deleteCarIfNeeded(&car);
+		mvprintw(24,NBCOL+24,"%3d", carNumber);
+		mvprintw(28,NBCOL+30,"%3d", maxCarNumber);
+		mvprintw(33,NBCOL+24,"%3d", spawnRate);
 		refresh();
-		for (i=0;i<gameSleep;i++) {
+		for (i=0;i<gameSleep;i++) {// Handles buttons
 			usleep(1000);
 			c=key_pressed();
 			if (c=='f' && gameSleep>5) gameSleep--;
-			if (c=='s' && gameSleep<50) gameSleep++;
+			if (c=='s' && gameSleep<100) gameSleep++;
+			if (c=='q') return;
+			if (c=='+'&& maxCarNumber<150) maxCarNumber++;
+			if (c=='-'&& maxCarNumber>1) maxCarNumber--;
+			if (c=='>'&& spawnRate>1) spawnRate--;
+			if (c=='<'&& spawnRate<200) spawnRate++;
+			if (c=='p') {
+				int flagPause=1;
+				while (flagPause) {// Looping so we can use options while on pause
+					for (pauseCmpt=0;pauseCmpt<10;pauseCmpt++) {
+						usleep(1000);
+						pauseC=key_pressed();
+						if (pauseC=='f' && gameSleep>5) gameSleep--;
+						if (pauseC=='s' && gameSleep<100) gameSleep++;
+						if (pauseC=='q') return;
+						if (pauseC=='+'&& maxCarNumber<150) {
+							maxCarNumber++;
+							mvprintw(28,NBCOL+30,"%3d", maxCarNumber); 
+							refresh();
+						}
+						if (pauseC=='-'&& maxCarNumber>1) {
+							maxCarNumber--;
+							mvprintw(28,NBCOL+30,"%3d", maxCarNumber); 
+							refresh();
+						}
+						if (pauseC=='>'&& spawnRate>1) {
+							spawnRate--;
+							mvprintw(33,NBCOL+24,"%3d", spawnRate);
+							refresh();
+						}
+						if (pauseC=='<'&& spawnRate<200) {
+							spawnRate++;
+							mvprintw(33,NBCOL+24,"%3d", spawnRate);
+							refresh();
+						}
+						if (pauseC=='r') {
+							flagPause=0; 
+							break;
+						}
+					}
+				}
+			}
 		}
 	}
 }

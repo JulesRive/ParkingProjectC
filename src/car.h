@@ -14,6 +14,7 @@ void changeDirection(car* car, int direction);
 void hideCar(car* car);
 void displayCar(car* car);
 
+void deleteCarIfNeeded(car **carPP);
 
 int isParked(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
 
@@ -22,7 +23,10 @@ int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int directio
 int canMove(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
 int moveCar(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
 
-void updateCar(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
+void barrierManagement(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
+void getTowardsSpot(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
+void getTowardsExit (car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
+void updateGame(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]);
 void colorParkingSpot(car* car, int mode);
 
 #endif

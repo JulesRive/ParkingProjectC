@@ -1,8 +1,14 @@
 #include "car.h"
 
+int carNumber=0;
+int maxCarNumber=0;
+int spawnRate=15;
+
 void changeDirection(car* car, int direction);
 void setColorCode();
-car* spawnCar(int y, int x, int direction, int nbLin, int nbCol, char tab[nbLin][nbCol]) {//Creates and returns a new car
+car* spawnCar(int y, int x, int direction, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// Creates and returns a new car
+	
 	activateBarrier(nbLin,nbCol,tab,0,1);
 	car* car=malloc(sizeof(struct car));
 	changeDirection(car,direction);
@@ -19,6 +25,7 @@ car* spawnCar(int y, int x, int direction, int nbLin, int nbCol, char tab[nbLin]
 	xorArrayCar(car, nbLin, nbCol, tab);
 	car->next=0;
 	car->toDelete=0;
+	carNumber++;
 	return car;
 }
 
@@ -31,26 +38,29 @@ void addCar(car* car, int y, int x, int direction, int nbLin, int nbCol, char ta
 	car->next=spawnCar(y,x,direction,nbLin,nbCol,tab);
 }
 
+void deleteCarIfNeeded(car **carPP)
+{
+		if ((*carPP)->toDelete) {
+			struct car *fille = (*carPP)->next;
+			 free(*carPP);
+			 carNumber--;
+			 *carPP=fille;
+		}
+}
 
 void hideCar(car* car) {
-	int i=0, j=0,animationCmpt=0;
+	int i=0, j=0;
 	for (i=0;i<car->height;i++) {
 		for (j=0;j<car->width;j++) {
 			if (inTab(car->posy+i+car->animationState, car->posx)) {
-				mvprintw(car->posy+i+car->animationState,car->posx+j," ");//Hides the car
-			}
-		}
-	}
-	if (car->state==3 && car->animationState>0) {	
-		for (animationCmpt=0; animationCmpt<car->animationState; animationCmpt++) {
-			if (inTab(car->posy+(5-animationCmpt), car->posx)) {
-				mvprintw(car->posy+(5-animationCmpt),car->posx+j," ");
+				mvprintw(car->posy+i+car->animationState,car->posx+j," ");// Hides the car
 			}
 		}
 	}
 }
 
-void xorArrayCar(car* car, int nbLin, int nbCol, char tab [nbLin][nbCol]) {//Acutalizes the car's position on the map
+void xorArrayCar(car* car, int nbLin, int nbCol, char tab [nbLin][nbCol]) {
+// Acutalizes the car's position on the map
 	int i=0,j=0;
 	for (;i<car->height;i++) {
 		for (j=0;j<car->width;j++) {
@@ -67,7 +77,8 @@ void setState(car* car, int state) {
 	car->state=state;
 }
 
-void loadCarrosserie(car* car, int direction) {//Loads an array that will be used to display the car from textFiles
+void loadCarrosserie(car* car, int direction) {
+// Loads an array that will be used to display the car from textFiles
 	if (direction==4) return;
 	char c; int i=0;
 	FILE* file;
@@ -107,17 +118,17 @@ void loadCarrosserie(car* car, int direction) {//Loads an array that will be use
 
 
 int canMove(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
-//Returns true if the car can move 1 step in it's current direction
-	return (sweepFront(car->direction, car->posx, car->posy, nbLin, nbCol, tab)==1);
+// Returns true if the car can move 1 step in it's current direction
+	return (sweepFront(car->direction, car->posx, car->posy, nbLin, nbCol, tab, car->state)==1);
 }
 
 int isParked(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
-//Returns 1 if the car is on a parking spot
-	return (sweepFront(car->direction, car->posx, car->posy, nbLin, nbCol, tab)==2);
+// Returns 1 if the car is on a parking spot
+	return (sweepFront(car->direction, car->posx, car->posy, nbLin, nbCol, tab, car->state)==2);
 }
 
-void changeDirection(car* car, int direction) {//======================================================================Correct the direction
-	car->speed=(direction<=2)?7:4;//So the car will move as fast horizontally as vertically
+void changeDirection(car* car, int direction) {
+	car->speed=(vertical(car->direction))?7:4;// So the car will move as fast horizontally as vertically
 	switch (car->direction) {
 		case UP: if (direction==LEFT) car->posx-=3; 
 		break;
@@ -157,18 +168,18 @@ int moveCar(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
 }
 
 int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int direction) {
-//Returns true if the car can turn in the direction 'direction'
+// Returns true if the car can turn in the direction 'direction'
 	int i=0,j=0;
 	switch(car->direction) {
 		case UP:
-			if (direction==LEFT) {//Going up and turning left
+			if (direction==LEFT) {// Going up and turning left
 				for (i=0;i<3;i++) {
 					for (j=0;j<3;j++) {
 						if (!isFree(tab[car->posy+i][car->posx-j-1])) return 0;
 					}
 				}
 			}
-			if (direction==RIGHT) {//Going up and turning right
+			if (direction==RIGHT) {// Going up and turning right
 				for (i=0;i<3;i++) {
 					for (j=0;j<3;j++) {
 						if (!isFree(tab[car->posy+i][car->posx+4+j])) return 0;
@@ -178,12 +189,12 @@ int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int directio
 		break;
 		
 		case RIGHT:
-			if (direction==UP) {//Going right and turning up
+			if (direction==UP) {// Going right and turning up
 				for (i=0;i<4;i++) {
 					if (!isFree(tab[car->posy-1][car->posx+3+i])) return 0;
 				}
 			}
-			if (direction==DOWN) {//Going right and turning down
+			if (direction==DOWN) {// Going right and turning down
 				for (i=0;i<4;i++) {
 					if (!isFree(tab[car->posy+3][car->posx+3+i])) return 0;
 				}			
@@ -191,14 +202,14 @@ int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int directio
 		break;
 		
 		case DOWN:
-			if (direction==LEFT) {//Going down and turning left
+			if (direction==LEFT) {// Going down and turning left
 				for (i=0;i<3;i++) {
 					for (j=0;j<3;j++) {
 						if (!isFree(tab[car->posy+1+i][car->posx-j-1])) return 0;
 					}
 				}
 			}
-			if (direction==RIGHT) {//Going down and turning right
+			if (direction==RIGHT) {// Going down and turning right
 				for (i=0;i<3;i++) {
 					for (j=0;j<3;j++) {
 						if (!isFree(tab[car->posy+1+i][car->posx+4+j])) return 0;
@@ -208,12 +219,12 @@ int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int directio
 		break;
 		
 		case LEFT:
-			if (direction==UP) {//Going left and turning up
+			if (direction==UP) {// Going left and turning up
 				for (i=0;i<4;i++) {
 						if (!isFree(tab[car->posy-1][car->posx+i])) return 0;
 				}
 			}
-			if (direction==DOWN) {//Going left and turning down
+			if (direction==DOWN) {// Going left and turning down
 				for (i=0;i<4;i++) {
 					if (!isFree(tab[car->posy+3][car->posx+i])) return 0;
 				}			
@@ -224,12 +235,13 @@ int canTurn(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int directio
 }
 
 int countPossibleMoves(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], int direction) {
-//Counts the number of straight moves possible after a turn. Will be positive if there is a parking spot, negative therwise
+// Counts the number of straight moves possible after a turn. Will be positive if there is a parking spot,
+// negative therwise
 	if (canTurn(car, nbLin, nbCol, tab, direction)==1) {
 		int i=0, x=car->posx, y=car->posy;
 		int saveDirection=car->direction;
 		changeDirection(car,direction);
-		while (sweepFront(direction, car->posx, car->posy, nbLin,nbCol,tab)==1) {
+		while (sweepFront(direction, car->posx, car->posy, nbLin,nbCol,tab, car->state)==1) {
 			switch (direction) {
 				case UP: car->posy--; break;
 				case RIGHT: car->posx++; break;
@@ -240,7 +252,7 @@ int countPossibleMoves(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], i
 			} 
 			i++;
 		}
-		int result=sweepFront(direction, car->posx, car->posy, nbLin,nbCol,tab);
+		int result=sweepFront(direction, car->posx, car->posy, nbLin,nbCol,tab, car->state);
 		changeDirection(car,saveDirection);
 		car->posx=x; car->posy=y;
 		if (result==2) return i;
@@ -248,119 +260,88 @@ int countPossibleMoves(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol], i
 	} return 0;
 }
 
-void updateCar(car* car,int nbLin, int nbCol, char tab[nbLin][nbCol]) {
-//This function will go through the car linkedList and update each car's position/state and display it on the board
-	int countStraight=0,countLeft=0,countRight=0;
-	car->time++;
-	if (isParked(car, nbLin, nbCol, tab)&&(car->state==1)) {
-		setState(car,2);
-		colorParkingSpot(car, 1);
-	}
-	if (car->next==0 && rand()%15==0 && car->animationState==0 && car->enteringState==0) {//Tests for adding a new car
-		addCar(car,SPAWNY,SPAWNX,UP,nbLin,nbCol,tab);
-	}
-	/*if (car->state==2 && rand()%40==0) {//Exiting the parking spot
-		car->backwards=1;
-		car->state=3;
-		colorParkingSpot(car, 0);
-		changeDirection(car, (car->direction+2)%4);
-	}*/
-
-//Moving towards the exit =============================================================================
-	if (car->state==3 && car->animationState==0 && --car->speed!=0) {//naively looking for the exit
-		hideCar(car);
-		xorArrayCar(car,nbLin, nbCol, tab);
-		if (car->timeStopped>=10) {
-			car->backwards=1;
-			changeDirection(car, (car->direction+2)%4);
-			car->timeStopped=0;
-		}
-		if (car->posx<93) {
-			if (canTurn(car, nbLin, nbCol, tab, RIGHT)) {
-				changeDirection(car, RIGHT); 
-				if (car->backwards) car->backwards=0;
-			} else if (canTurn(car, nbLin, nbCol, tab, UP)) {
-				changeDirection(car, UP); 
-				if (car->backwards) car->backwards=0;
-			} else if (canTurn(car, nbLin, nbCol, tab, DOWN)) {
-				changeDirection(car, DOWN); 
-				if (car->backwards) car->backwards=0;
-			}
-		}
-		else if (car->posx>93) {
-			if (canTurn(car, nbLin, nbCol, tab, LEFT)) {
-				changeDirection(car, LEFT); 
-				if (car->backwards) car->backwards=0;
-			} else if (canTurn(car, nbLin, nbCol, tab, UP)) {
-					changeDirection(car, UP); 
-					if (car->backwards) car->backwards=0;
-				}
-		}
-		else if (car->posx==93 && canTurn(car, nbLin, nbCol, tab, UP)) {
-			changeDirection(car, UP); 
-			if (car->backwards) car->backwards=0;
-		}
-		else {
-			
-		}
-		if (moveCar(car,nbLin, nbCol, tab)==0) car->timeStopped++;
-		xorArrayCar(car, nbLin,nbCol,tab);
-		displayCar(car);
-		
-//Exiting =====================================================================================
-		if (car->posx==93 && car->posy==6) {
-			activateBarrier(nbLin,nbCol,tab,0,3);
-		}
-		if (car->posx==93 && car->posy==1) {
-			car->animationState=1;
-			colorBarrier(nbLin,nbCol,tab,0,4);
-			activateBarrier(nbLin,nbCol,tab,1,3);
-		}
-	}
-// Moving towards a spot  =======================================================================
+void getTowardsSpot(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// This code will make the car go towards a Parking Spot
 	
-	if (car->state==1 && --car->speed!=0 && car->animationState==0) {
-		hideCar(car);
-		xorArrayCar(car,nbLin,nbCol,tab);
-		if (car->timeStopped>=10) {
-			car->backwards=1;
-			changeDirection(car, (car->direction+2)%4);
-			car->timeStopped=0;
-		}
-		countStraight=countPossibleMoves(car,nbLin,nbCol,tab,car->direction);
-		countLeft=countPossibleMoves(car,nbLin,nbCol,tab,(car->direction+3)%4);
-		countRight=countPossibleMoves(car,nbLin,nbCol,tab,(car->direction+1)%4);
+	int countStraight=0,countLeft=0,countRight=0;
+	hideCar(car);
+	xorArrayCar(car,nbLin,nbCol,tab);
+	if (car->timeStopped>=10) {
+		car->backwards=1;
+		changeDirection(car, (car->direction+2)%4);
+		car->timeStopped=0;
+	}
+	countStraight=countPossibleMoves(car,nbLin,nbCol,tab,car->direction);
+	countLeft=countPossibleMoves(car,nbLin,nbCol,tab,(car->direction+3)%4);
+	countRight=countPossibleMoves(car,nbLin,nbCol,tab,(car->direction+1)%4);		
+	int chanceOfTurning= (car->time>200)?1:(car->time>150)?2:(car->time>100)?3:4;
 		
-//If the car is active, executes the moving algorithm and displays the car		
-		
-		if (rand()%4==0) {
-			if (canTurn(car, nbLin, nbCol, tab, (car->direction + bestDirection(countLeft,countStraight,countRight)+4)%4)) {
-				if (car->backwards) car->backwards=0;
-				changeDirection(car, (car->direction + bestDirection(countLeft,countStraight,countRight)+4)%4);
+		if (rand()%chanceOfTurning==0) {
+			int turningDirection=(bestDirection(countLeft,countStraight,countRight)+4)%4;
+			if (canTurn(car, nbLin, nbCol, tab, (car->direction + turningDirection+4)%4)) {
+				if (car->backwards && turningDirection!=car->direction) car->backwards=0;
+				changeDirection(car, (car->direction + turningDirection+4)%4);
 			}		
 		} 
-		
-		if (moveCar(car,nbLin, nbCol, tab)==0) car->timeStopped++;
-		xorArrayCar(car,nbLin,nbCol,tab);
-		displayCar(car);
-	}
 	
-// Barrier management ======================================================================
+	if (moveCar(car,nbLin, nbCol, tab)==0) car->timeStopped++;
+	xorArrayCar(car,nbLin,nbCol,tab);
+	displayCar(car);
+	
+}
+
+void getTowardsExit (car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// This code will make the car go towards the exit
+	hideCar(car);
+	xorArrayCar(car,nbLin, nbCol, tab);
+	if (car->timeStopped>=10) {
+		car->backwards=1;
+		changeDirection(car, (car->direction+2)%4);
+		car->timeStopped=0;
+	} else if (car->posx<93) {
+		if (canTurn(car, nbLin, nbCol, tab, RIGHT)) {
+			changeDirection(car, RIGHT); 
+			if (car->backwards) car->backwards=0;
+		} else if (canTurn(car, nbLin, nbCol, tab, UP)) {
+			changeDirection(car, UP); 
+			if (car->backwards) car->backwards=0;
+		} else if (canTurn(car, nbLin, nbCol, tab, DOWN)) {
+			changeDirection(car, DOWN); 
+			if (car->backwards) car->backwards=0;
+		}
+	}
+	else if (car->posx>93) {
+		if (canTurn(car, nbLin, nbCol, tab, LEFT)) {
+			changeDirection(car, LEFT); 
+			if (car->backwards) car->backwards=0;
+		} else if (canTurn(car, nbLin, nbCol, tab, UP)) {
+				changeDirection(car, UP); 
+				if (car->backwards) car->backwards=0;
+			}
+	}
+	else if (car->posx==93 && canTurn(car, nbLin, nbCol, tab, UP)) {
+		changeDirection(car, UP); 
+		if (car->backwards) car->backwards=0;
+	}
+	else {
 		
-		
+	}
+	if (moveCar(car,nbLin, nbCol, tab)==0) car->timeStopped++;
+	xorArrayCar(car, nbLin,nbCol,tab);
+	displayCar(car);
+	
+	
+}
+
+void barrierManagement(car* car, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// Activates barriers according to the current car's differents entering/exiting states
+
 	if (car->animationState>0) {	
-		if (car->state==3);
 		displayCar(car);
 		if (car->animationState==0) {
 			displayCar(car);
 			car->enteringState=10;
 			colorBarrier(nbLin,nbCol,tab,0,1);	
-		}
-		if (car->state==3 && car->animationState==5) {
-			xorArrayCar(car,nbLin,nbCol,tab);
-			cleanExit();
-			car->toDelete=1;
-			colorBarrier(nbLin,nbCol,tab,1,4);
 		}
 	}
 	if (car->enteringState==7) {
@@ -372,18 +353,67 @@ void updateCar(car* car,int nbLin, int nbCol, char tab[nbLin][nbCol]) {
 			activateBarrier(nbLin, nbCol, tab, 1, 2);
 		}
 	}
-	
-//============================================================================================
-
-	if (car->next!=0) {
-	  struct car *fille=car->next;
-		updateCar(fille, nbLin, nbCol, tab);
-		if (fille->toDelete) {
-			 car->next = fille->next;
-			 free(fille);
+	if (car->state == 3 && car->animationState==0) {
+		if (car->posx==93 && car->posy==6) {
+			activateBarrier(nbLin,nbCol,tab,0,3);
+		}
+		if (car->posx==93 && car->posy==1) {
+			car->animationState=1;
+			colorBarrier(nbLin,nbCol,tab,0,4);
+			activateBarrier(nbLin,nbCol,tab,1,3);
 		}
 	}
-  
+	if (car->state==3 && car->animationState>=5) {
+			xorArrayCar(car,nbLin,nbCol,tab);
+			car->toDelete=1;
+			colorBarrier(nbLin,nbCol,tab,1,4);
+	}
+}
+
+void updateGame(car* car,int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+// This function will go through the car linkedList and update each car's position/state and display 
+// it on the board, will also handle spawning/deleting and barriers activation.
+	car->time++;
+	if (isParked(car, nbLin, nbCol, tab)&&(car->state==1)) {
+		setState(car,2);
+		colorParkingSpot(car, 1);
+	}
+	if (car->next==0 && rand()%spawnRate==0 && car->animationState==0 && car->enteringState==0 && carNumber<maxCarNumber) {
+	// Tests for adding a new car
+		addCar(car,SPAWNY,SPAWNX,UP,nbLin,nbCol,tab);
+	}
+	if (car->state==2 && rand()%40==0) {
+	// Exiting the parking spot
+		car->backwards=1;
+		car->state=3;
+		colorParkingSpot(car, 0);
+		changeDirection(car, (car->direction+2)%4);
+	}
+
+// Moving towards the exit =============================================================================
+	
+	if (car->state==3 && car->animationState==0 && --car->speed!=0) {
+		getTowardsExit(car, nbLin, nbCol, tab);
+	}
+	
+// Moving towards a spot  =============================================================================
+	
+	if (car->state==1 && --car->speed!=0 && car->animationState==0) {
+		getTowardsSpot(car, nbLin, nbCol, tab);
+	}
+	
+// Barrier management =================================================================================
+	
+	if (car->state!=2) {	
+		barrierManagement(car, nbLin, nbCol, tab);
+	}
+		
+// Recursion ==========================================================================================
+
+	if (car->next!=0) {
+		updateGame(car->next, nbLin, nbCol, tab);
+		deleteCarIfNeeded(&car->next);
+	}  
 }
 
 void displayCar(car* car) {
@@ -405,14 +435,17 @@ void displayCar(car* car) {
 	} 
 	if (car->state==3) {
 		for (i=0;i<car->height;i++) {
-			if (inTab(car->posy+i-car->animationState, car->posx)) {
-				move((car->posy+i)-car->animationState,car->posx);
+			//if (inTab(car->posy+i-car->animationState, car->posx)) {
+			move(car->posy+i,car->posx);
+			int carLin=i+car->animationState;
 				for (j=0;j<car->width;j++) {
-					if (car->backwards) {
-						interpretChar(car->carrosserie[(car->direction+2)%4][i*(car->width)+j]);
-					} else interpretChar(car->carrosserie[car->direction][i*(car->width)+j]);
+					if (carLin>=4) {
+						printw(" ");
+					} else if (car->backwards) {
+						interpretChar(car->carrosserie[(car->direction+2)%4][carLin*(car->width)+j]);
+					} else interpretChar(car->carrosserie[car->direction][carLin*(car->width)+j]);
 				}
-			}
+			//}
 		}
 	}
 	
