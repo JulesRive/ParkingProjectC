@@ -5,6 +5,7 @@ int L,C;
 extern int maxCarNumber;
 extern int carNumber;
 extern int spawnRate;
+char tab[NBLIN][NBCOL];
 
 /**Pour récupérer les coordonnées (x,y) du clic de la souris**/
 int click_souris()
@@ -75,14 +76,14 @@ void ncurses_souris() {
   }
 }
 
-void loadMap(FILE *f, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
+void loadMap(FILE *f) {
 	char c; int i=0; int j=0;
 	
 	while((c=fgetc(f)) !=EOF)
 	{
 		tab[i][j]=c;
 		j++;
-		if (j==nbCol) {
+		if (j==NBCOL) {
 			j=0;
 			i++;
 		}
@@ -91,11 +92,12 @@ void loadMap(FILE *f, int nbLin, int nbCol, char tab[nbLin][nbCol]) {
 
 
 
-void displayTab(int nbLin, int nbCol, char tab[nbLin][nbCol]) 
+void displayTab() 
 {	
 	int i=0; int j=0;
-	for(i=0;i<nbLin;i++) {
-		for(j=0;j<nbCol;j++) {
+	
+	for(i=0;i<NBLIN;i++) {
+		for(j=0;j<NBCOL;j++) {
 			interpretChar(tab[i][j]);
 		}
 		usleep(7500);
@@ -157,7 +159,7 @@ void initialize() {
 	ncurses_souris();
 }
 
-void run(int nbLin, int nbCol, char tab[nbLin][nbCol], int mode) {
+void run( int mode) {
 //Game loop, handles buttons
 	if (mode=='q') return;
 	if (mode==1) maxCarNumber=66;
@@ -165,12 +167,12 @@ void run(int nbLin, int nbCol, char tab[nbLin][nbCol], int mode) {
 	char c, pauseC;
 	int i=0, pauseCmpt=0, gameSleep=20;
 	clear();
-	displayTab(nbLin,nbCol,tab);
+	displayTab(tab);
 	refresh(); usleep(500000);
-	car* car=spawnCar(SPAWNY, SPAWNX, UP, nbLin, nbCol, tab);
+	car* car=spawnCar(SPAWNY, SPAWNX, UP, tab);
 	refresh(); usleep(500000);
 	while (car) {
-		updateGame(car, nbLin, nbCol, tab);
+		updateGame(car,tab);
 		deleteCarIfNeeded(&car);
 		mvprintw(24,NBCOL+24,"%3d", carNumber);
 		mvprintw(28,NBCOL+30,"%3d", maxCarNumber);
@@ -228,16 +230,16 @@ void run(int nbLin, int nbCol, char tab[nbLin][nbCol], int mode) {
 
 void launch() {
 	setlocale(LC_ALL, "");
-	char tab[NBLIN][NBCOL];
+	;
 	FILE* file = fopen("./txt/map.txt", "r");
 	if(file == NULL){
 	printf("Can't open the map.txt file\n");
 	} 	
-	loadMap(file,NBLIN,NBCOL,tab);
+	loadMap(file);
 	fseek(file, 0, SEEK_SET);
 	fclose(file);
 	initialize();
-	run(NBLIN,NBCOL,tab,menu());
+	run(menu());
 	
 	endwin();
 }

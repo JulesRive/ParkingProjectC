@@ -1,4 +1,5 @@
 #include "misc.h"
+extern char tab[NBLIN][NBCOL];
 
 int inTab(int y, int x) {
 	return ((y>=0 && y<NBLIN)&&(x>=0 && x <NBCOL));
@@ -12,7 +13,7 @@ int isFree(char c) {
 	return (c==' ' || c=='.' || (c>'A' && c<'Z') || c==('b'^'b'));//Will return 1 if c is a free space.
 }
 
-int sweepFront(int direction, int x, int y, int nbLin, int nbCol, char tab[nbLin][nbCol], int state) {
+int sweepFront(int direction, int x, int y, int state) {
 // 0 if the front spot isn't free, 1 if it is, 2 if car parked.
 // If the car is exiting, will avoid parking spots
 	int i=0, width=0, height=0;
@@ -52,17 +53,17 @@ int sweepFront(int direction, int x, int y, int nbLin, int nbCol, char tab[nbLin
 
 void interpretChar(char c) {
 	switch (c) {
-		case '[' : printw("┌"); break;
-		case ']' : printw("┐"); break;
-		case '-' : printw("─"); break;
-		case 't' : printw("┬");	break;
-		case '(' : printw("└");	break;
-		case '|' : printw("│");	break;
-		case ')' : printw("┘");	break;
-		case '{' : printw("┤");	break;
-		case '}' : printw("├");	break;
-		case '+' : printw("┼");	break;
-		case 'h' : printw("┴"); break;
+		case '[' : printw("╔"); break;
+		case ']' : printw("╗"); break;
+		case '-' : printw("═"); break;
+		case 't' : printw("╦");	break;
+		case '(' : printw("╚");	break;
+		case '|' : printw("║");	break;
+		case ')' : printw("╝");	break;
+		case '{' : printw("╣");	break;
+		case '}' : printw("╠");	break;
+		case '+' : printw("╬");	break;
+		case 'h' : printw("╩"); break;
 		case '/' : printw("|");	break;
 		case '_' : printw("-");	break;
 		case '.' : printw(" ");	break;
@@ -109,7 +110,7 @@ int bestDirection(int left, int straight, int right) {//-1 ==> left; 0 ==> strai
 	return bestDirection(-left,-straight,-right);
 }
 
-void activateBarrier(int nbLin, int nbCol, char tab[nbLin][nbCol], int openClose, int barrierNb) {
+void activateBarrier(int openClose, int barrierNb) {
 	int posy=0,posx=0;int sizeCmpt=0;
 	switch (barrierNb) {
 		case 1: posy=47; posx=SPAWNX; break;//1st barrier of the entering sas.
@@ -120,10 +121,10 @@ void activateBarrier(int nbLin, int nbCol, char tab[nbLin][nbCol], int openClose
 	for (;sizeCmpt<4;sizeCmpt++) {
 		tab[posy][posx+sizeCmpt]^='b';
 	}
-	colorBarrier(nbLin,nbCol,tab,openClose,barrierNb);
+	colorBarrier(openClose,barrierNb);
 }
 
-void colorBarrier(int nbLin, int nbCol, char tab[nbLin][nbCol], int greenOrRed, int barrierNb) {
+void colorBarrier(int greenOrRed, int barrierNb) {
 	int posy=0,posx=0;int sizeCmpt=0;
 	if (greenOrRed==0) attron(COLOR_PAIR(3));
 	if (greenOrRed==1) attron(COLOR_PAIR(4));

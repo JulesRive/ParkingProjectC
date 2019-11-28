@@ -7,11 +7,11 @@ int click_souris();
 void ncurses_initialiser();
 void ncurses_couleurs();
 void ncurses_souris();
-void displayTab(int nbLin, int nbCol, char tab[nbLin][nbCol]);
-void loadMap(FILE* file, int nbLin, int nbCol, char tab[nbLin][nbCol]);
+void displayTab();
+void loadMap(FILE* file);
 char key_pressed();
 void initialize();
 void launch();
-void run(int nbLin, int nbCol, char tab[nbLin][nbCol], int mode);
+void run(int mode);
 
 #endif
