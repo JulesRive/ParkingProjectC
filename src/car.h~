@@ -4,13 +4,13 @@
 #include "initialisation.h"
 
 
-car* spawnCar(int y, int x, int spawnDirection);
-void addCar(car* car, int y, int x, int spawnDirection);
+car* spawnCar(int y, int x, int direction);
+void addCar(car* car, int y, int x, int direction);
 void loadCarrosserie(car* car, int direction);
 void xorArrayCar(car* car);
 void setState(car* car, int state);
 void setColorCode(car* car);
-void changeDirection(car* car, int newDirection);
+void changeDirection(car* car, int direction);
 void hideCar(car* car);
 void displayCar(car* car);
 

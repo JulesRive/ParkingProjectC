@@ -53,7 +53,7 @@ struct Coord
 #define SPAWNX 81
 #define SPAWNY 43
 #define TURNLEFT -1
-#define TURNSTRAIGHT 0
+#define TURNSTRAIGHT
 #define TURNRIGHT 1
 #endif
 

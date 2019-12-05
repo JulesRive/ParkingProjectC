@@ -10,6 +10,6 @@ int sweepFront(int direction, int x, int y, int state);
 void activateBarrier(int openClose, int barrierNb);
 void colorBarrier(int greenOrRed, int barrierNb);
 void interpretChar(char c);
-int bestDirection(car* c);
+int bestDirection(int left, int straight, int right);
 
 #endif

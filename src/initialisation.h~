@@ -8,7 +8,7 @@ void ncurses_initialiser();
 void ncurses_couleurs();
 void ncurses_souris();
 void displayTab();
-void loadMap();
+void loadMap(FILE* file);
 void loadExitGradient();
 char key_pressed();
 void initialize();

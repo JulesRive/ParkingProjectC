@@ -94,7 +94,6 @@ void loadMap() {
 	}
 	fseek(file, 0, SEEK_SET);
 	fclose(file);
-	loadExitGradient();
 }
 
 struct Elt 
@@ -287,8 +286,14 @@ void run( int mode) {
 }
 
 void launch() {
-	setlocale(LC_ALL, "");	
-	loadMap();
+	setlocale(LC_ALL, "");
+	FILE* file = fopen("./txt/map.txt", "r");
+	if(file == NULL){
+	printf("Can't open the map.txt file\n");
+	} 	
+	loadMap(file);
+	
+	loadExitGradient();
 	initialize();
 	run(menu());
 	

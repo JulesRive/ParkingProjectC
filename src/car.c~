@@ -122,7 +122,6 @@ void loadCarrosserie(car* car, int direction) {
 int canMove(car* car) {
 // Returns true if the car can move 1 step in it's current direction
 	if (car->direction==UP && car->posy==SPAWNY  && car->posx==SPAWNX) return 1;
-	if (car->state==1 && car->direction==UP && car->posx==93 && car->posy-1==14) return 0;
 	return (sweepFront(car->direction, car->posx, car->posy, car->state)==1);
 }
 
