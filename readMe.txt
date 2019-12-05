@@ -1,11 +1,9 @@
-Version 1.2
+Version 1.5
 
 #####################################################
-CountingMoves now takes into account the coordinates
-changing while turning.
-moveCar is now int and calls canMove before changing
-car's coordinates
-
-Bugs :
-CountingsMoves does not work, car not even turning
-anymore
+Entering, parking and exiting are now functionnal.
+High spawnRate + high maxCarNumber might result in
+unsolvable traffic.
+VIP zone not accessible yet and only 1 kind of vehicle
+available.
+#####################################################
